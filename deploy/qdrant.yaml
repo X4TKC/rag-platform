@@ -1,0 +1,35 @@
+# Qdrant vector DB for the kind cluster: one pod + a 1 Gi volume.
+# On AWS this could stay in-cluster (EBS volume) or move to a managed store.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+spec:
+  serviceName: qdrant
+  replicas: 1
+  selector:
+    matchLabels: {app: qdrant}
+  template:
+    metadata:
+      labels: {app: qdrant}
+    spec:
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.12.4
+          ports: [{containerPort: 6333, name: http}]
+          volumeMounts: [{name: data, mountPath: /qdrant/storage}]
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: {requests: {storage: 1Gi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+spec:
+  selector: {app: qdrant}
+  ports: [{port: 6333, targetPort: http}]

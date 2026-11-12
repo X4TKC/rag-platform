@@ -1,0 +1,23 @@
+# Defaults for kind. An EKS values file will override image, service and config.
+replicaCount: 1
+
+image:
+  repository: rag-api
+  tag: dev
+  pullPolicy: IfNotPresent   # kind: image is loaded with `kind load docker-image`
+
+service:
+  type: NodePort
+  port: 8000
+  nodePort: 30080            # matches extraPortMappings in deploy/kind/cluster.yaml
+
+config:
+  OLLAMA_URL: http://host.docker.internal:11434   # Ollama runs on the PC (GPU), not in the cluster
+  QDRANT_URL: http://qdrant:6333
+  CHAT_MODEL: llama3.2:3b
+  EMBED_MODEL: nomic-embed-text
+  TOP_K: "4"
+
+resources:
+  requests: {cpu: 100m, memory: 128Mi}
+  limits: {memory: 512Mi}
