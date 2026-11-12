@@ -16,3 +16,12 @@ The model server runs on the host where the GPU is; the API reaches it at `host.
 
 ## 2026-11-09: Hardened pod defaults
 Non-root user 10001, no privilege escalation, read-only root filesystem, memory limit. Cheap to do from the start and they are what security scanners (Trivy, Checkov, Kyverno) flag later.
+
+## 2026-11-12: Ollama on CPU, in Docker
+Current Ollama builds no longer include CUDA kernels for the GTX 1080 (compute capability 6.1), so the model runs on the Ryzen CPU. A 3B model answers in about 6 s, which is fine for a demo. Ollama runs as a Docker container (`make ollama`) so the setup is the same on any machine; kind pods reach it through `host.docker.internal` (Docker Desktop). On a Linux CI runner that name does not exist, so CI puts Ollama on kind's Docker network and passes its IP to Helm.
+
+## 2026-11-12: Actions pinned to commit SHAs
+In March 2026 attackers rewrote most tags of `aquasecurity/trivy-action` and published a malicious Trivy v0.69.4 (CVE-2026-33634); workflows using `@v0.x` tags ran the stealer. Tags are mutable, commit SHAs are not, so every action in CI is pinned to a full SHA with the version in a comment, and the Trivy binary is pinned to v0.69.3. Dependabot can bump the SHAs later.
+
+## 2026-11-12: Small model in CI
+The end-to-end job uses `qwen2.5:0.5b` instead of `llama3.2:3b`: it downloads in seconds and runs on the 4-CPU runner. The job checks the plumbing (cluster, chart, networking, retrieval), not answer quality, so it asserts that the right source document is retrieved rather than the exact answer text.

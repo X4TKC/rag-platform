@@ -18,9 +18,11 @@ up:              ## kind cluster + qdrant + the API via Helm
 down:            ## delete the whole cluster
 	kind delete cluster --name $(CLUSTER)
 
-models:          ## pull the two Ollama models (run once)
-	ollama pull llama3.2:3b
-	ollama pull nomic-embed-text
+ollama:          ## run Ollama in Docker on port 11434 and pull the two models
+	docker start ollama 2>/dev/null || docker run -d --name ollama -p 11434:11434 \
+	  -v ollama:/root/.ollama --restart unless-stopped ollama/ollama:latest
+	docker exec ollama ollama pull nomic-embed-text
+	docker exec ollama ollama pull llama3.2:3b
 
 demo:            ## ingest the sample docs and ask a question
 	for f in sample-docs/*.md; do \
@@ -30,4 +32,4 @@ demo:            ## ingest the sample docs and ask a question
 	curl -s -X POST localhost:8080/ask -H 'content-type: application/json' \
 	  -d '{"question":"How do I roll back a bad deploy?"}' | jq
 
-.PHONY: help test up down models demo
+.PHONY: help test up down ollama demo

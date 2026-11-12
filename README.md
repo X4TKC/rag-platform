@@ -1,5 +1,7 @@
 # rag-platform
 
+[![ci](https://github.com/X4TKC/rag-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/X4TKC/rag-platform/actions/workflows/ci.yml)
+
 A question-answering API over your own documents (RAG: retrieval-augmented generation), built as a **platform engineering portfolio project**. The app is deliberately small. The interesting part is everything around it: containers, Kubernetes, Helm, then Terraform on AWS, CI/CD with security scanning, monitoring and cost control.
 
 ```
@@ -14,9 +16,9 @@ A question-answering API over your own documents (RAG: retrieval-augmented gener
 
 | Phase | What | Cost | Status |
 |---|---|---|---|
-| 1 | App, Docker, kind cluster, Helm chart, unit tests | free | **in progress** |
+| 1 | App, Docker, kind cluster, Helm chart, unit tests | free | **done**: runs on kind, end-to-end demo passes |
 | 2 | Terraform: VPC, EKS, ECR, IRSA; Bedrock instead of Ollama; apply → demo → destroy | ~$1 per session | planned |
-| 3 | GitHub Actions: tests, Trivy image scan, Checkov on Terraform, OIDC to AWS (no keys) | free | planned |
+| 3 | GitHub Actions: tests, Helm lint, Trivy image scan, kind end-to-end test; later Checkov on Terraform, OIDC to AWS (no keys) | free | **in progress** |
 | 4 | Prometheus + Grafana dashboards, alerts, AWS Budgets / OpenCost | free locally | planned |
 | 5 | Architecture diagram, decision log, write-up | free | ongoing (`docs/decisions.md`) |
 
@@ -37,6 +39,7 @@ deploy/
   helm/rag-api/       Helm chart for the API
 sample-docs/     two small docs for the demo
 docs/decisions.md    why things are the way they are
+.github/workflows/ci.yml  tests, Helm lint, Trivy scan, kind end-to-end test
 ```
 
 ## Run it
@@ -55,9 +58,9 @@ docker compose exec ollama ollama pull nomic-embed-text
 # API on localhost:8000, try: curl localhost:8000/readyz
 ```
 
-**On Kubernetes (kind)** (also needs kind, kubectl, helm, jq; Ollama running on the host):
+**On Kubernetes (kind)** (also needs kind, kubectl, helm, jq):
 ```sh
-make models   # once
+make ollama   # Ollama in Docker + the two models (~2.3 GB, once)
 make up       # cluster + qdrant + API, ~2 min
 make demo     # ingest sample-docs/, ask a question
 make down     # delete everything
