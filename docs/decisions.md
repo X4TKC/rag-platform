@@ -25,3 +25,6 @@ In March 2026 attackers rewrote most tags of `aquasecurity/trivy-action` and pub
 
 ## 2026-11-12: Small model in CI
 The end-to-end job uses `qwen2.5:0.5b` instead of `llama3.2:3b`: it downloads in seconds and runs on the 4-CPU runner. The job checks the plumbing (cluster, chart, networking, retrieval), not answer quality, so it asserts that the right source document is retrieved rather than the exact answer text.
+
+## 2026-11-20: Multi-stage image without pip
+The first CI run failed the Trivy gate: 1 HIGH in Debian's zlib and 5 HIGH in packages bundled with the base image's pip (msgpack, urllib3, setuptools). None were in the app's own dependencies. The image now installs dependencies into a venv in a build stage, removes pip/setuptools from the final stage (the app never installs anything at runtime), and runs `apt-get upgrade` for Debian security fixes. Result: 0 fixable HIGH/CRITICAL. Alternative: `.trivyignore` the findings, rejected because they were fixable.
